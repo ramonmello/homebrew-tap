@@ -12,12 +12,10 @@ Formulae for [Homebrew](https://brew.sh) by Ramon Mello.
 brew install ramonmello/tap/tmux-agent-usage
 ```
 
-Or tap once and use the short name:
-
-```sh
-brew tap ramonmello/tap
-brew install tmux-agent-usage
-```
+Use the full name the first time: Homebrew only loads formulae from taps you
+trust, and installing by full name trusts that formula. After that, the short
+name works. To trust every formula in this tap at once, run
+`brew trust ramonmello/tap`.
 
 Upgrade with `brew update && brew upgrade tmux-agent-usage`. Remove with
 `brew uninstall tmux-agent-usage` and, if nothing else uses the tap,
