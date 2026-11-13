@@ -1,10 +1,9 @@
 class TmuxAgentUsage < Formula
   desc "AI coding agent subscription usage for the tmux status line"
   homepage "https://github.com/ramonmello/tmux-agent-usage"
-  # Fill both release markers using the procedure in the tap README.
-  url "https://github.com/ramonmello/tmux-agent-usage/archive/REPLACE_WITH_V0_1_0_COMMIT.tar.gz"
+  url "https://github.com/ramonmello/tmux-agent-usage/archive/f567a75c6a1e969cb1a58cbe659a36e30c1733f3.tar.gz"
   version "0.1.0"
-  sha256 "REPLACE_WITH_V0_1_0_SOURCE_SHA256"
+  sha256 "c5b5dd238336850c70f4e1fabe2f6b845c218d04cb082ef0988af1cc50ff88cc"
   license "MIT"
 
   depends_on "rust" => :build
