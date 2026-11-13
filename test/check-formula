@@ -1,0 +1,38 @@
+#!/bin/sh
+# Check Formula/tmux-agent-usage.rb against a tmux-agent-usage source tree,
+# without Homebrew: the formula's fetch, install and test methods run with the
+# real Cargo in a temporary root. Any attempt to start an AI client, Keychain,
+# curl or tmux fails the check. Release checks still need brew audit/install.
+#
+# Usage: test/check-formula PLUGIN_SOURCE
+set -eu
+
+[ "$#" -eq 1 ] || { echo 'usage: test/check-formula PLUGIN_SOURCE' >&2; exit 2; }
+TAP=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd -P)
+SOURCE=$(CDPATH= cd -- "$1" && pwd -P)
+[ -f "$SOURCE/Cargo.toml" ] || { echo "check-formula: no Cargo.toml in $SOURCE" >&2; exit 2; }
+VERSION=$(sed -n 's/^version = "\([0-9][0-9.]*\)"$/\1/p' "$SOURCE/Cargo.toml" | head -n 1)
+
+ROOT=$(mktemp -d "${TMPDIR:-/tmp}/check-formula.XXXXXX")
+trap 'rm -rf "$ROOT"' 0
+trap 'exit 1' 1 2 15
+mkdir "$ROOT/fakes"
+for program in claude codex curl security tmux; do
+    printf '#!/bin/sh\nprintf "%%s\\n" "$0" >> "$FORMULA_FORBIDDEN_LOG"\nexit 97\n' > "$ROOT/fakes/$program"
+    chmod 755 "$ROOT/fakes/$program"
+done
+
+# Keep the toolchain, but no personal provider paths or build output in SOURCE.
+CARGO_HOME=${CARGO_HOME:-"$HOME/.cargo"}
+RUSTUP_HOME=${RUSTUP_HOME:-"$HOME/.rustup"}
+export CARGO_HOME RUSTUP_HOME
+export CARGO_TARGET_DIR="$ROOT/build" FORMULA_FORBIDDEN_LOG="$ROOT/forbidden"
+export HOME="$ROOT/home" PATH="$ROOT/fakes:$PATH"
+mkdir "$HOME"
+
+(cd "$SOURCE" && ruby "$TAP/test/formula_harness.rb" "$TAP/Formula/tmux-agent-usage.rb" "$ROOT" "$VERSION")
+if [ -e "$FORMULA_FORBIDDEN_LOG" ]; then
+    echo 'check-formula: the formula started a forbidden process:' >&2
+    cat "$FORMULA_FORBIDDEN_LOG" >&2
+    exit 1
+fi
